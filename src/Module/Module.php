@@ -3,12 +3,12 @@ namespace Cubex\ApiFoundation\Module;
 
 use Cubex\ApiFoundation\Module\Procedures\ProcedureRoute;
 
-interface Module
+abstract class Module
 {
   /**
    * @return ProcedureRoute[]|\Generator
    */
-  public function getRoutes();
+  abstract public function getRoutes();
 
-  public function getUri(): string;
+  abstract public static function getBasePath(): string;
 }
