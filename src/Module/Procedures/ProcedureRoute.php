@@ -1,6 +1,7 @@
 <?php
 namespace Cubex\ApiFoundation\Module\Procedures;
 
+use Cubex\ApiFoundation\Auth\ApiAuthenticator;
 use Cubex\ApiTransport\Endpoints\ApiEndpoint;
 use Cubex\ApiTransport\Payloads\AbstractPayload;
 use Packaged\Context\Context;
@@ -27,28 +28,41 @@ class ProcedureRoute extends Route implements Handler
     );
   }
 
+  /**
+   * @var ApiAuthenticator
+   */
+  protected $_authenticator;
+
+  /**
+   * @param ApiAuthenticator $authenticator
+   *
+   * @return ProcedureRoute
+   */
+  public function setAuthenticator(ApiAuthenticator $authenticator)
+  {
+    $this->_authenticator = $authenticator;
+    return $this;
+  }
+
   public function match(Context $context): bool
   {
     if(parent::match($context))
     {
       if($this->_endpoint->requiresAuthentication())
       {
-        //TODO: Validate the auth token correctly
-        if(!$context->request()->query->has('token'))
+        if(!$this->_authenticator || !$this->_authenticator->isAuthenticated())
         {
           return false;
         }
       }
-      //TODO: Get permissions from context user
-      $userPermissions = [];
-      foreach($this->_endpoint->getRequiredPermissions() as $permission)
+
+      if(empty($this->_endpoint->getRequiredPermissions()))
       {
-        if(!in_array($permission->getKey(), $userPermissions))
-        {
-          return false;
-        }
+        return true;
       }
-      return true;
+
+      return $this->_authenticator
+        && $this->_authenticator->hasPermission(...$this->_endpoint->getRequiredPermissions());
     }
     return false;
   }
