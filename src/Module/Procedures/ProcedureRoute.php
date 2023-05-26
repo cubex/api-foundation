@@ -102,7 +102,7 @@ class ProcedureRoute extends Route implements Handler
 
         if (!$payload->isValid())
         {
-          throw new InvalidPayloadException("Invalid payload");
+          throw new InvalidPayloadException();
         }
 
         //Execute with payload
