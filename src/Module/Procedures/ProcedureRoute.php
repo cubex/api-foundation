@@ -96,6 +96,11 @@ class ProcedureRoute extends Route implements Handler
           $payload->fromContext($c);
         }
 
+        if (!$payload->isValid())
+        {
+          throw new \Exception("Invalid payload");
+        }
+
         //Execute with payload
         $response = $procedure->execute($payload);
       }
