@@ -2,6 +2,7 @@
 namespace Cubex\ApiFoundation\Module\Procedures;
 
 use Cubex\ApiFoundation\Auth\ApiAuthenticator;
+use Cubex\ApiFoundation\Exceptions\InvalidPayloadException;
 use Cubex\ApiTransport\Endpoints\ApiEndpoint;
 use Cubex\ApiTransport\Payloads\AbstractPayload;
 use Packaged\Context\Context;
@@ -72,6 +73,9 @@ class ProcedureRoute extends Route implements Handler
     return $this;
   }
 
+  /**
+   * @throws InvalidPayloadException
+   */
   public function handle(Context $c): Response
   {
     $procedure = new $this->_procedureClass();
@@ -98,7 +102,7 @@ class ProcedureRoute extends Route implements Handler
 
         if (!$payload->isValid())
         {
-          throw new \Exception("Invalid payload");
+          throw new InvalidPayloadException("Invalid payload");
         }
 
         //Execute with payload
