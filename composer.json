@@ -24,7 +24,7 @@
     "packaged/routing": "~2.4",
     "packaged/http": "~1.6",
     "cubex/framework": "^4.3",
-    "cubex/api-transport": "^0.2"
+    "cubex/api-transport": "~0.2"
   },
   "require-dev": {
   },
