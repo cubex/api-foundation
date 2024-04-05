@@ -99,7 +99,7 @@ class ProcedureRoute extends Route implements Handler
 
     if(!method_exists($procedure, 'execute'))
     {
-      throw new Exception("Unable to handle procedure: execute missing");
+      return \Packaged\Http\Response::create("Unable to handle procedure: execute missing", 404);
     }
 
     $plClass = $this->_endpoint->getPayloadClass();

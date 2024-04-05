@@ -10,7 +10,7 @@ class ModuleRoute extends Route
   /** @param Module $_module */
   public function __construct(protected Module $_module)
   {
-    $this->add(new ModuleCondition($this->_module::class, $this->_module::getBasePath()));
+    $this->add(new ModuleCondition(get_class($this->_module), $this->_module::getBasePath()));
   }
 
   /**
