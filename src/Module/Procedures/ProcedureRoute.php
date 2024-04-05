@@ -97,7 +97,7 @@ class ProcedureRoute extends Route implements Handler
       $procedure->setContext($c);
     }
 
-    if (!method_exists($procedure, 'execute'))
+    if(!method_exists($procedure, 'execute'))
     {
       throw new Exception("Unable to handle procedure: execute missing");
     }
