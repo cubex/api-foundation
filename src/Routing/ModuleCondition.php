@@ -24,7 +24,7 @@ class ModuleCondition extends RequestCondition
    */
   public static function withModule(Module $module)
   {
-    return new static($module::class, $module::getBasePath());
+    return new static(get_class($module), $module::getBasePath());
   }
 
   /**
