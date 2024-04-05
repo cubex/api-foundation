@@ -2,21 +2,18 @@
 namespace Cubex\ApiFoundation\Controller;
 
 use Cubex\ApiFoundation\Auth\ApiAuthenticator;
-use Cubex\ApiFoundation\Module\Module;
+use Cubex\ApiFoundation\Module\Procedures\ProcedureRoute;
+use Generator;
 
 class ApiModuleController extends ApiFoundationController
 {
-  /**
-   * @var Module
-   */
-  protected $_module;
+  /** @var ApiAuthenticator */
+  protected ApiAuthenticator $_authenticator;
 
-  public function __construct(Module $module)
+  /** @param Array<ProcedureRoute>|Generator<ProcedureRoute>  $_routes */
+  public function __construct(protected array|Generator $_routes)
   {
-    $this->_module = $module;
   }
-
-  protected $_authenticator;
 
   /**
    * @param ApiAuthenticator $authenticator
@@ -29,12 +26,14 @@ class ApiModuleController extends ApiFoundationController
     return $this;
   }
 
+  /**
+   * @return Generator<ProcedureRoute>
+   */
   protected function _generateRoutes()
   {
-    foreach($this->_module->getRoutes() as $route)
+    foreach($this->_routes as $route)
     {
       yield $route->setAuthenticator($this->_authenticator);
     }
   }
-
 }

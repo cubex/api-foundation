@@ -12,12 +12,18 @@ class ApiAuthenticator implements ContextAware, WithContext
   use WithContextTrait;
   use ContextAwareTrait;
 
+  /** @return bool */
   public function isAuthenticated(): bool
   {
     return false;
   }
 
-  public function hasPermission(ApiPermission ...$permission)
+  /**
+   * @param ApiPermission ...$permission
+   *
+   * @return bool
+   */
+  public function hasPermission(ApiPermission ...$permission): bool
   {
     return false;
   }

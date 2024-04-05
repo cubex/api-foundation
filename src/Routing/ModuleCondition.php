@@ -7,19 +7,33 @@ use Packaged\Routing\RequestCondition;
 
 class ModuleCondition extends RequestCondition
 {
-  private $_module;
+  /**
+   * @param class-string<Module> $_moduleClassName
+   * @param string               $moduleBasePath
+   */
+  public function __construct(private string $_moduleClassName, string $moduleBasePath)
+  {
+    $this->path($moduleBasePath);
+  }
 
+  /**
+   * @deprecated Use the constructor instead
+   * @param Module $module
+   *
+   * @return static
+   */
   public static function withModule(Module $module)
   {
-    $condition = new static();
-    $condition->_module = $module;
-    $condition->path($module::getBasePath());
-    return $condition;
+    return new static($module::class, $module::getBasePath());
   }
 
+  /**
+   * @param Context $context
+   *
+   * @return void
+   */
   public function complete(Context $context)
   {
-    $context->meta()->set('api.module', get_class($this->_module));
+    $context->meta()->set('api.module', $this->_moduleClassName);
   }
-
 }
