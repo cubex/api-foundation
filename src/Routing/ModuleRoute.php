@@ -7,18 +7,26 @@ use Packaged\Routing\Route;
 
 class ModuleRoute extends Route
 {
-  protected $_module;
-
-  public static function withModule(Module $module)
+  /** @param Module $_module */
+  public function __construct(protected Module $_module)
   {
-    $route = new static();
-    $route->_module = $module;
-    $route->add(ModuleCondition::withModule($module));
-    return $route;
+    $this->add(new ModuleCondition(get_class($this->_module), $this->_module::getBasePath()));
   }
 
+  /**
+   * @deprecated Use the constructor instead
+   * @param Module $module
+   *
+   * @return static
+   */
+  public static function withModule(Module $module)
+  {
+    return new static($module);
+  }
+
+  /** @return ApiModuleController */
   public function getHandler()
   {
-    return new ApiModuleController($this->_module);
+    return new ApiModuleController($this->_module->getRoutes());
   }
 }

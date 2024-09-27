@@ -5,27 +5,29 @@ use Cubex\ApiFoundation\Auth\ApiAuthenticator;
 use Cubex\ApiFoundation\Exceptions\InvalidPayloadException;
 use Cubex\ApiTransport\Endpoints\ApiEndpoint;
 use Cubex\ApiTransport\Payloads\AbstractPayload;
+use Exception;
 use Packaged\Context\Context;
 use Packaged\Context\ContextAware;
 use Packaged\Http\Responses\JsonResponse;
 use Packaged\Routing\Handler\Handler;
 use Packaged\Routing\RequestCondition;
 use Packaged\Routing\Route;
+use ReflectionClass;
+use ReflectionException;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProcedureRoute extends Route implements Handler
 {
-  /** @var */
-  protected $_endpoint;
-  /** @var string */
-  protected $_procedureClass;
-
-  public function __construct(ApiEndpoint $endpoint, string $procedureClass)
+  /**
+   * @param ApiEndpoint                     $_endpoint
+   * @param class-string<AbstractProcedure> $_procedureClass
+   */
+  public function __construct(protected ApiEndpoint $_endpoint, protected string $_procedureClass)
   {
-    $this->_endpoint = $endpoint;
-    $this->_procedureClass = $procedureClass;
     $this->add(
-      RequestCondition::i()->path($endpoint->getPath(), RequestCondition::TYPE_EXACT)->method($endpoint->getVerb())
+      RequestCondition::i()
+        ->path($this->_endpoint->getPath(), RequestCondition::TYPE_EXACT)
+        ->method($this->_endpoint->getVerb())
     );
   }
 
@@ -45,6 +47,11 @@ class ProcedureRoute extends Route implements Handler
     return $this;
   }
 
+  /**
+   * @param Context $context
+   *
+   * @return bool
+   */
   public function match(Context $context): bool
   {
     if(parent::match($context))
@@ -68,20 +75,21 @@ class ProcedureRoute extends Route implements Handler
     return false;
   }
 
+  /** @return $this */
   public function getHandler()
   {
     return $this;
   }
 
   /**
-   * @throws InvalidPayloadException
+   * @throws InvalidPayloadException|ReflectionException|Exception
    */
   public function handle(Context $c): Response
   {
     $procedure = new $this->_procedureClass();
     if(!($procedure instanceof Procedure))
     {
-      throw new \Exception("Invalid procedure class given");
+      throw new Exception("Invalid procedure class given");
     }
 
     if($procedure instanceof ContextAware)
@@ -89,32 +97,30 @@ class ProcedureRoute extends Route implements Handler
       $procedure->setContext($c);
     }
 
-    if(method_exists($procedure, 'execute'))
+    if(!method_exists($procedure, 'execute'))
     {
-      $plClass = $this->_endpoint->getPayloadClass();
-      if($plClass !== null)
-      {
-        $payload = new $plClass();
-        if($payload instanceof AbstractPayload)
-        {
-          $payload->fromContext($c);
-        }
-
-        if(!$payload->isValid())
-        {
-          throw InvalidPayloadException::withType((new \ReflectionClass($payload))->getShortName());
-        }
-
-        //Execute with payload
-        $response = $procedure->execute($payload);
-      }
-      else
-      {
-        //Execute without payload
-        $response = $procedure->execute();
-      }
-      return JsonResponse::create($response);
+      return \Packaged\Http\Response::create("Unable to handle procedure: execute missing", 404);
     }
-    return \Packaged\Http\Response::create("Unable to handle procedure: execute missing", 404);
+
+    $plClass = $this->_endpoint->getPayloadClass();
+
+    if (!$plClass)
+    {
+      return JsonResponse::create($procedure->execute());
+    }
+
+    $payload = new $plClass();
+    if($payload instanceof AbstractPayload)
+    {
+      $payload->fromContext($c);
+    }
+
+    if(!$payload->isValid())
+    {
+      throw new InvalidPayloadException((new ReflectionClass($payload))->getShortName());
+    }
+
+    //Execute with payload
+    return JsonResponse::create($procedure->execute($payload));
   }
 }
